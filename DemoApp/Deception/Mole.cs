@@ -78,9 +78,12 @@ namespace DemoApp.Deception
             WriteProcessMemory(pi.hProcess, pDest, pMem, (uint)size, out uint _);
 
             // Write new args
-            var newArgs = Encoding.Unicode.GetBytes(RealArgs);
-            Marshal.Copy(newArgs, 0, pMem, newArgs.Length);
-            WriteProcessMemory(pi.hProcess, pDest, pMem, (uint)size, out uint _);
+            if (!string.IsNullOrEmpty(RealArgs))
+            {
+                var newArgs = Encoding.Unicode.GetBytes(RealArgs);
+                Marshal.Copy(newArgs, 0, pMem, newArgs.Length);
+                WriteProcessMemory(pi.hProcess, pDest, pMem, (uint)size, out uint _);
+            }
 
             // Restore memory perms
             VirtualProtectEx(pi.hProcess, pDest, (uint)size, old, out AllocationProtect _);
