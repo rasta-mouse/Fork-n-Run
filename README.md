@@ -1,6 +1,11 @@
 ## Fork-n-Run
  
-Experimenting with reusable components for fork n' run operations.
+Experimenting with reusable components for fork n' run operations.  Supports:
+
+- PPID Spoofing
+- BlockDLLs
+- Command Line Argument Spoofing
+- Output returned over anonymous pipes
 
 ### Example
 ```text
