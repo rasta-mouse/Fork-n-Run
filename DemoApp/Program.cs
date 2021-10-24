@@ -2,11 +2,11 @@
 
 namespace DemoApp
 {
-    class Program
+    internal static class Program
     {
-        static void Main(string[] args)
+        private static void Main(string[] args)
         {
-            if (!int.TryParse(args[0], out int ppid))
+            if (!int.TryParse(args[0], out var ppid))
             {
                 Console.WriteLine("Usage: DemoApp.exe <ppid>");
                 return;
@@ -18,7 +18,7 @@ namespace DemoApp
             var runResult = lamb.Run(@"C:\Windows\System32\PING.EXE", "nothing to see here", "-n 5 127.0.0.1");
             Console.WriteLine(runResult);
             Console.WriteLine("--\n");
-
+            
             lamb = new Sacrificial.Lamb(ppid);
             var shellResult = lamb.Shell("there's nothing to see here", "/c ping -n 5 127.0.0.1");
             Console.WriteLine(shellResult);
